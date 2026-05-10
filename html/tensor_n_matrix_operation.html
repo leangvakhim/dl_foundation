@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Learning Foundations: Tensor & Matrix Operations</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- KaTeX for beautifully rendering mathematical equations -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        matA: { 50: '#eff6ff', 200: '#bfdbfe', 500: '#3b82f6', 800: '#1e40af' }, // Blue
+                        matB: { 50: '#f0fdf4', 200: '#bbf7d0', 500: '#22c55e', 800: '#166534' }, // Green
+                        matC: { 50: '#faf5ff', 200: '#e9d5ff', 500: '#a855f7', 800: '#6b21a8' }, // Purple
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for matrix brackets */
+        .matrix-bracket-left {
+            border-left: 2px solid #334155;
+            border-top: 2px solid #334155;
+            border-bottom: 2px solid #334155;
+            width: 8px;
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .matrix-bracket-right {
+            border-right: 2px solid #334155;
+            border-top: 2px solid #334155;
+            border-bottom: 2px solid #334155;
+            width: 8px;
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .matrix-cell {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="bg-white text-slate-800 font-sans min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Tensor & Matrix Operations</h1>
+            <p class="text-slate-500">Deep Learning Foundations visualized step-by-step</p>
+        </header>
+
+        <!-- Controls & Operation Selector -->
+        <div
+            class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <label for="operation-select" class="font-semibold text-slate-700">Select Operation:</label>
+                <select id="operation-select"
+                    class="bg-white border border-slate-300 text-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none px-3 py-2">
+                    <option value="multiplication">Matrix Multiplication (Dot Product)</option>
+                    <option value="addition">Matrix Addition (Element-wise)</option>
+                    <option value="subtraction">Matrix Subtraction (Element-wise)</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="btn-back"
+                    class="px-5 py-2 rounded-lg font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    &larr; Back
+                </button>
+                <div class="text-sm font-semibold text-slate-500 w-24 text-center">
+                    Step <span id="step-current">1</span> / <span id="step-total">5</span>
+                </div>
+                <button id="btn-next"
+                    class="px-5 py-2 rounded-lg font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm">
+                    Next &rarr;
+                </button>
+            </div>
+        </div>
+
+        <!-- Step Description & Equation -->
+        <div class="mb-10 text-center">
+            <h2 id="step-title" class="text-2xl font-bold text-slate-800 mb-3">Loading...</h2>
+            <p id="step-desc" class="text-slate-600 mb-6 max-w-2xl mx-auto h-12">...</p>
+
+            <!-- Equation Display Area -->
+            <div
+                class="inline-block bg-slate-50 border border-slate-200 px-8 py-4 rounded-xl shadow-sm min-w-[300px] min-h-[80px] flex items-center justify-center">
+                <div id="equation-display" class="text-lg"></div>
+            </div>
+        </div>
+
+        <!-- Matrix Visualization Area -->
+        <div class="flex flex-col lg:flex-row items-center justify-center gap-4 md:gap-8 overflow-x-auto pb-8">
+
+            <!-- Matrix A -->
+            <div class="flex flex-col items-center">
+                <div class="text-lg font-bold text-matA-800 mb-2">Matrix A</div>
+                <div class="flex">
+                    <div class="matrix-bracket-left"></div>
+                    <div id="matrix-a" class="grid grid-cols-2 gap-2 p-2 bg-white">
+                        <!-- JS injected -->
+                    </div>
+                    <div class="matrix-bracket-right"></div>
+                </div>
+            </div>
+
+            <!-- Operator symbol (+ or x) -->
+            <div id="operator-symbol" class="text-3xl font-bold text-slate-400 mt-6 lg:mt-0">
+                &times;
+            </div>
+
+            <!-- Matrix B -->
+            <div class="flex flex-col items-center">
+                <div class="text-lg font-bold text-matB-800 mb-2">Matrix B</div>
+                <div class="flex">
+                    <div class="matrix-bracket-left"></div>
+                    <div id="matrix-b" class="grid grid-cols-2 gap-2 p-2 bg-white">
+                        <!-- JS injected -->
+                    </div>
+                    <div class="matrix-bracket-right"></div>
+                </div>
+            </div>
+
+            <!-- Equals symbol (=) -->
+            <div class="text-3xl font-bold text-slate-400 mt-6 lg:mt-0">
+                =
+            </div>
+
+            <!-- Matrix C (Result) -->
+            <div class="flex flex-col items-center">
+                <div class="text-lg font-bold text-matC-800 mb-2">Result (Matrix C)</div>
+                <div class="flex">
+                    <div class="matrix-bracket-left"></div>
+                    <div id="matrix-c" class="grid grid-cols-2 gap-2 p-2 bg-white">
+                        <!-- JS injected -->
+                    </div>
+                    <div class="matrix-bracket-right"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../js/tensor_n_matrix_operation.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding the Loss Function</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax for LaTeX Equation Rendering -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Smooth transitions for UI elements */
+        .step-transition {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        /* Hide element class */
+        .hidden-view {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            visibility: hidden;
+        }
+
+        /* Range slider styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        /* WebKit (Chrome, Safari, Edge) */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ef4444;
+            /* Red-500 */
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #e2e8f0;
+            /* Slate-200 */
+            border-radius: 4px;
+        }
+
+        /* Firefox */
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ef4444;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col py-8 px-4 md:px-8">
+
+    <!-- Main Card Container -->
+    <div
+        class="m-auto bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-5xl overflow-hidden flex flex-col min-h-[750px] md:min-h-[600px]">
+
+        <!-- Header / Progress -->
+        <div
+            class="px-6 md:px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 flex-none">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold text-slate-900">Deep Learning: The Loss Function</h1>
+                <p class="text-sm text-slate-500 mt-1" id="step-counter">Step 1 of 5</p>
+            </div>
+            <!-- Progress Dots -->
+            <div class="flex space-x-2" id="progress-dots">
+                <!-- Dots injected by JS -->
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 flex flex-col md:flex-row relative">
+
+            <!-- Left Side: Text and Equations -->
+            <div
+                class="w-full md:w-5/12 p-6 md:p-8 flex flex-col justify-center border-r border-slate-50 bg-white z-10">
+                <h2 id="step-title" class="text-xl font-bold text-blue-600 mb-4">Title</h2>
+                <p id="step-desc" class="text-slate-600 leading-relaxed mb-6 min-h-[100px]">Description goes here.</p>
+
+                <!-- Equation Container -->
+                <div id="equation-container"
+                    class="bg-blue-50/50 rounded-xl p-4 border border-blue-100 min-h-[120px] flex flex-col items-center justify-center w-full">
+                    <p class="text-xs text-blue-500 font-semibold uppercase tracking-wider mb-2 shrink-0">Mathematical
+                        Equation</p>
+                    <div id="math-display"
+                        class="text-lg text-slate-800 w-full overflow-x-auto overflow-y-hidden text-center pb-2"></div>
+                </div>
+            </div>
+
+            <!-- Right Side: Interactive Visualizations -->
+            <div
+                class="w-full md:w-7/12 bg-slate-50/50 p-4 md:p-8 pb-28 md:pb-32 flex flex-col items-center justify-center relative min-h-[450px] md:min-h-[auto]">
+
+                <!-- Dynamic Visual Container -->
+                <div id="visual-area" class="w-full h-full flex items-center justify-center relative">
+                    <!-- Step 1 Visual -->
+                    <div id="vis-1" class="absolute flex flex-col items-center justify-center text-center">
+                        <div class="text-6xl mb-4 relative">
+                            🤖
+                            <span class="absolute -right-6 -top-2 text-3xl">❓</span>
+                        </div>
+                        <p class="text-slate-500 font-medium">The AI makes a guess...</p>
+                        <div class="text-3xl my-4 text-slate-300">⬇️</div>
+                        <div class="bg-white px-6 py-4 rounded-xl shadow-sm border border-slate-200">
+                            <p class="text-xl font-bold text-slate-800">Loss Function (The Grader)</p>
+                            <p class="text-sm text-slate-500">Calculates how wrong the guess is.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2, 3 Visual (Number Line & Square) -->
+                    <div id="vis-2" class="absolute w-full max-w-md hidden-view">
+                        <div class="relative h-24 mt-12 px-4 md:px-0">
+                            <!-- Number Line -->
+                            <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-300 -translate-y-1/2 rounded"></div>
+
+                            <!-- True Value (Fixed at 10) -->
+                            <div
+                                class="absolute top-1/2 left-[50%] -translate-y-1/2 -translate-x-1/2 flex flex-col items-center">
+                                <div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md z-10">
+                                </div>
+                                <span class="text-xs font-bold text-blue-600 mt-2 absolute top-4 whitespace-nowrap">True
+                                    ($y=10$)</span>
+                            </div>
+
+                            <!-- Predicted Value (Dynamic) -->
+                            <div id="pred-marker"
+                                class="absolute top-1/2 left-[25%] -translate-y-1/2 -translate-x-1/2 flex flex-col items-center transition-all duration-75">
+                                <div class="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md z-10"></div>
+                                <span
+                                    class="text-xs font-bold text-red-600 mb-2 absolute bottom-4 whitespace-nowrap">Pred
+                                    ($\hat{y}$)</span>
+                            </div>
+
+                            <!-- Error Line (Connecting True and Pred) -->
+                            <div id="error-line"
+                                class="absolute top-1/2 h-1 bg-red-300 -translate-y-1/2 border-t-2 border-dashed border-red-500 transition-all duration-75">
+                            </div>
+                        </div>
+
+                        <!-- Step 3 specific: Error Square visualization -->
+                        <div id="error-square-container"
+                            class="mt-8 flex flex-col items-center justify-center hidden-view">
+                            <div id="error-square"
+                                class="bg-red-100 border-2 border-red-400 flex items-center justify-center text-red-600 font-bold transition-all duration-75 opacity-80 rounded-md">
+                                Area = Loss
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 & 5 Visual (Canvas Curve) -->
+                    <div id="vis-4"
+                        class="absolute w-full h-full flex flex-col items-center justify-center hidden-view px-4">
+                        <div class="w-full max-w-md aspect-video relative">
+                            <canvas id="loss-canvas"
+                                class="absolute inset-0 w-full h-full bg-white rounded-xl shadow-sm border border-slate-200"></canvas>
+                        </div>
+                        <button id="restart-btn"
+                            class="mt-4 px-4 py-2 bg-blue-100 text-blue-600 font-semibold rounded-lg hover:bg-blue-200 transition hidden">
+                            Restart Training (Gradient Descent)
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Global Slider Control (Visible in steps 2, 3, 4) -->
+                <div id="slider-container"
+                    class="w-[90%] md:w-full max-w-md mt-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 hidden-view absolute bottom-4 md:bottom-8 z-20">
+                    <div class="flex justify-between text-sm font-semibold mb-2">
+                        <span class="text-slate-500">Prediction ($\hat{y}$): <span id="slider-val-display"
+                                class="text-red-500">5.0</span></span>
+                        <span class="text-slate-500">Loss: <span id="loss-val-display"
+                                class="text-slate-800">25.0</span></span>
+                    </div>
+                    <input type="range" id="prediction-slider" min="0" max="20" step="0.1" value="5">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer / Controls -->
+        <div
+            class="px-6 md:px-8 py-4 border-t border-slate-100 bg-white flex justify-between items-center z-10 flex-none">
+            <button id="btn-prev"
+                class="px-4 md:px-6 py-2 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                Back
+            </button>
+            <button id="btn-next"
+                class="px-4 md:px-6 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                Next Step
+            </button>
+        </div>
+    </div>
+
+    <script src="../js/loss_function.js"></script>
+</body>
+
+</html>
