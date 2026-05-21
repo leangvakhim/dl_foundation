@@ -44,6 +44,15 @@ const steps = [
         showSlider: false,
         visId: 'vis-4',
         action: startGradientDescent
+    },
+    // NEW PyTorch Step Added Here!
+    {
+        title: "6. PyTorch Implementation",
+        desc: "In the real world, we don't write complex math loops by hand. We use libraries like <strong>PyTorch</strong>. <br><br>Notice how the code in the right panel perfectly matches the 5 steps we just walked through visually. <code>nn.MSELoss()</code> handles the math automatically!",
+        equation: "$$\\text{PyTorch: } \\texttt{nn.MSELoss()}$$",
+        showSlider: false,
+        visId: 'vis-6',
+        action: null // No specific action needed, it just shows the code container
     }
 ];
 
@@ -65,7 +74,8 @@ const lossValDisplay = document.getElementById('loss-val-display');
 const visElements = {
     'vis-1': document.getElementById('vis-1'),
     'vis-2': document.getElementById('vis-2'),
-    'vis-4': document.getElementById('vis-4')
+    'vis-4': document.getElementById('vis-4'),
+    'vis-6': document.getElementById('vis-6') // Added vis-6 reference
 };
 const predMarker = document.getElementById('pred-marker');
 const errorLine = document.getElementById('error-line');
@@ -140,17 +150,22 @@ function renderStep(index) {
 
     steps.forEach((_, i) => {
         const dot = document.getElementById(`dot-${i}`);
-        dot.className = `w-2 h-2 rounded-full transition-colors duration-300 ${i === index ? 'bg-blue-600' : 'bg-slate-200'}`;
+        if (dot) {
+            dot.className = `w-2 h-2 rounded-full transition-colors duration-300 ${i === index ? 'bg-blue-600' : 'bg-slate-200'}`;
+        }
     });
 
-    // Manage Visual Visibility
+    // Manage Visual Visibility with transitions
     Object.keys(visElements).forEach(key => {
+        const el = visElements[key];
+        if (!el) return;
+
         if (key === step.visId) {
-            visElements[key].classList.remove('hidden-view');
-            visElements[key].style.opacity = '1';
+            el.classList.remove('hidden-view');
+            el.style.opacity = '1';
         } else {
-            visElements[key].classList.add('hidden-view');
-            visElements[key].style.opacity = '0';
+            el.classList.add('hidden-view');
+            el.style.opacity = '0';
         }
     });
 
@@ -192,7 +207,7 @@ function updateDynamicMathValues() {
     } else if (currentStep === 2) {
         mathEl.innerHTML = `$$Loss = (10 - ${prediction.toFixed(1)})^2 = ${Math.pow(10 - prediction, 2).toFixed(1)}$$`;
     }
-    if (window.MathJax && window.MathJax.typesetPromise) {
+    if (window.MathJax && window.MathJax.typesetPromise && (currentStep === 1 || currentStep === 2)) {
         MathJax.typesetPromise([mathEl]);
     }
 }

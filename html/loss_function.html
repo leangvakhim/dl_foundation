@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Understanding the Loss Function</title>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- MathJax for LaTeX Equation Rendering -->
     <script>
         window.MathJax = {
@@ -20,6 +22,7 @@
         };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
         /* Smooth transitions for UI elements */
         .step-transition {
@@ -32,6 +35,7 @@
             pointer-events: none;
             position: absolute;
             visibility: hidden;
+            z-index: -1;
         }
 
         /* Range slider styling */
@@ -86,6 +90,27 @@
         input[type=range]:focus {
             outline: none;
         }
+
+        /* Syntax highlighting colors for our manual code block */
+        .code-keyword {
+            color: #ff7b72;
+        }
+
+        .code-function {
+            color: #d2a8ff;
+        }
+
+        .code-string {
+            color: #a5d6ff;
+        }
+
+        .code-comment {
+            color: #8b949e;
+        }
+
+        .code-number {
+            color: #79c0ff;
+        }
     </style>
 </head>
 
@@ -100,7 +125,7 @@
             class="px-6 md:px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 flex-none">
             <div>
                 <h1 class="text-xl md:text-2xl font-bold text-slate-900">Deep Learning: The Loss Function</h1>
-                <p class="text-sm text-slate-500 mt-1" id="step-counter">Step 1 of 5</p>
+                <p class="text-sm text-slate-500 mt-1" id="step-counter">Step 1 of 6</p>
             </div>
             <!-- Progress Dots -->
             <div class="flex space-x-2" id="progress-dots">
@@ -115,7 +140,8 @@
             <div
                 class="w-full md:w-5/12 p-6 md:p-8 flex flex-col justify-center border-r border-slate-50 bg-white z-10">
                 <h2 id="step-title" class="text-xl font-bold text-blue-600 mb-4">Title</h2>
-                <p id="step-desc" class="text-slate-600 leading-relaxed mb-6 min-h-[100px]">Description goes here.</p>
+                <div id="step-desc" class="text-slate-600 leading-relaxed mb-6 min-h-[120px] md:min-h-[140px]">
+                    Description goes here.</div>
 
                 <!-- Equation Container -->
                 <div id="equation-container"
@@ -133,8 +159,10 @@
 
                 <!-- Dynamic Visual Container -->
                 <div id="visual-area" class="w-full h-full flex items-center justify-center relative">
+
                     <!-- Step 1 Visual -->
-                    <div id="vis-1" class="absolute flex flex-col items-center justify-center text-center">
+                    <div id="vis-1"
+                        class="absolute flex flex-col items-center justify-center text-center w-full step-transition">
                         <div class="text-6xl mb-4 relative">
                             🤖
                             <span class="absolute -right-6 -top-2 text-3xl">❓</span>
@@ -148,7 +176,7 @@
                     </div>
 
                     <!-- Step 2, 3 Visual (Number Line & Square) -->
-                    <div id="vis-2" class="absolute w-full max-w-md hidden-view">
+                    <div id="vis-2" class="absolute w-full max-w-md hidden-view step-transition">
                         <div class="relative h-24 mt-12 px-4 md:px-0">
                             <!-- Number Line -->
                             <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-300 -translate-y-1/2 rounded"></div>
@@ -189,7 +217,7 @@
 
                     <!-- Step 4 & 5 Visual (Canvas Curve) -->
                     <div id="vis-4"
-                        class="absolute w-full h-full flex flex-col items-center justify-center hidden-view px-4">
+                        class="absolute w-full h-full flex flex-col items-center justify-center hidden-view px-4 step-transition">
                         <div class="w-full max-w-md aspect-video relative">
                             <canvas id="loss-canvas"
                                 class="absolute inset-0 w-full h-full bg-white rounded-xl shadow-sm border border-slate-200"></canvas>
@@ -198,6 +226,49 @@
                             class="mt-4 px-4 py-2 bg-blue-100 text-blue-600 font-semibold rounded-lg hover:bg-blue-200 transition hidden">
                             Restart Training (Gradient Descent)
                         </button>
+                    </div>
+
+                    <!-- Step 6 Visual (PyTorch Code Tutorial) -->
+                    <div id="vis-6"
+                        class="absolute w-full h-full flex flex-col items-center justify-center hidden-view px-2 md:px-4 step-transition">
+                        <div
+                            class="w-full max-w-2xl bg-[#0d1117] rounded-xl shadow-2xl border border-slate-700 overflow-hidden text-left flex flex-col">
+                            <!-- Mac-like terminal header -->
+                            <div class="bg-[#161b22] px-4 py-3 flex items-center space-x-2 border-b border-slate-700">
+                                <div class="w-3.5 h-3.5 rounded-full bg-red-500"></div>
+                                <div class="w-3.5 h-3.5 rounded-full bg-yellow-500"></div>
+                                <div class="w-3.5 h-3.5 rounded-full bg-green-500"></div>
+                                <span class="text-sm text-slate-400 ml-2 font-mono">pytorch_loss_tutorial.py</span>
+                            </div>
+                            <!-- Code Content -->
+                            <div
+                                class="p-5 md:p-6 overflow-x-auto text-sm md:text-base font-mono leading-relaxed text-[#c9d1d9]">
+                                <pre><code><span class="code-keyword">import</span> torch
+<span class="code-keyword">import</span> torch.nn <span class="code-keyword">as</span> nn
+
+<span class="code-comment"># 1. Setup True Value (10) and Guess (5)</span>
+y_true = torch.tensor([<span class="code-number">10.0</span>])
+y_pred = torch.tensor([<span class="code-number">5.0</span>], requires_grad=<span class="code-keyword">True</span>)
+
+<span class="code-comment"># 2. Define Loss Function (Mean Squared Error)</span>
+loss_fn = nn.<span class="code-function">MSELoss</span>()
+
+<span class="code-comment"># 3. Calculate Loss (The Square Area!)</span>
+loss = <span class="code-function">loss_fn</span>(y_pred, y_true)
+<span class="code-function">print</span>(<span class="code-string">f"Loss: </span><span class="code-keyword">{</span>loss.item()<span class="code-keyword">}</span><span class="code-string">"</span>) <span class="code-comment"># Output: 25.0</span>
+
+<span class="code-comment"># 4. Find the Slope (Gradient)</span>
+loss.<span class="code-function">backward</span>()
+<span class="code-function">print</span>(<span class="code-string">f"Slope: </span><span class="code-keyword">{</span>y_pred.grad.item()<span class="code-keyword">}</span><span class="code-string">"</span>) <span class="code-comment"># Output: -10.0</span>
+
+<span class="code-comment"># 5. Take a step downhill (Learning!)</span>
+lr = <span class="code-number">0.1</span>
+<span class="code-keyword">with</span> torch.<span class="code-function">no_grad</span>():
+    y_pred -= lr * y_pred.grad
+
+<span class="code-function">print</span>(<span class="code-string">f"New Guess: </span><span class="code-keyword">{</span>y_pred.item()<span class="code-keyword">}</span><span class="code-string">"</span>) <span class="code-comment"># Closer to 10!</span></code></pre>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
