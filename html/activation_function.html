@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deep Learning: Activation Functions</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+
     <style>
         /* Clean transitions for smooth step changes */
         .fade-enter {
@@ -17,24 +22,6 @@
             opacity: 1;
             transform: translateY(0);
             transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-        }
-
-        /* Custom fraction styling for equations */
-        .fraction {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            vertical-align: middle;
-            margin: 0 0.2rem;
-        }
-
-        .numerator {
-            border-bottom: 2px solid #1e293b;
-            padding: 0 0.3rem;
-        }
-
-        .denominator {
-            padding: 0 0.3rem;
         }
     </style>
 </head>
@@ -56,7 +43,7 @@
                 Activation Function Explorer
             </h1>
             <div class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full" id="step-indicator">
-                Step 1 of 6
+                Step 1 of 7
             </div>
         </div>
 
@@ -73,8 +60,7 @@
                     <!-- Equation Box (Dynamic) -->
                     <div id="equation-box" class="hidden bg-indigo-50/50 border border-indigo-100 rounded-xl p-6 mb-6">
                         <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3">The Equation</h3>
-                        <div id="step-equation"
-                            class="text-xl text-slate-800 font-medium font-serif flex items-center flex-wrap gap-2">
+                        <div id="step-equation" class="w-full text-slate-800">
                             <!-- Equation injected here -->
                         </div>
                     </div>

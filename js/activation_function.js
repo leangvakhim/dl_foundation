@@ -30,18 +30,7 @@ const stepsData = [
         type: 'html',
         title: "The Core Equation",
         text: "Before we look at specific curves, let's look at the underlying math.<br><br>First, the neuron calculates a weighted sum of its inputs plus a bias. We call this raw value <strong>z</strong>.<br><br>Then, we pass <strong>z</strong> through our Activation Function <strong>f()</strong> to get the final output <strong>a</strong>.",
-        equation: `
-            <div class="flex flex-col gap-3 w-full">
-                <div class="flex items-center justify-between w-full bg-white p-3 rounded shadow-sm border border-slate-100">
-                    <span class="text-sm text-slate-500 font-sans">1. Raw Input:</span>
-                    <span>z = (w · x) + b</span>
-                </div>
-                <div class="flex items-center justify-between w-full bg-indigo-50 border border-indigo-200 p-3 rounded shadow-sm">
-                    <span class="text-sm text-indigo-500 font-sans font-bold">2. Activation:</span>
-                    <span class="font-bold text-indigo-700">a = f(z)</span>
-                </div>
-            </div>
-        `,
+        equation: `z = (w \\cdot x) + b \\quad \\Rightarrow \\quad a = f(z)`,
         visualHtml: `
             <div class="flex flex-col items-center justify-center gap-6 bg-white p-8 rounded-2xl shadow-sm border border-slate-200 w-full max-w-md">
                 <div class="px-6 py-3 bg-slate-100 rounded-lg text-slate-700 font-mono font-bold shadow-inner">z = 2.5</div>
@@ -68,13 +57,7 @@ const stepsData = [
         type: 'graph',
         title: "Sigmoid Function",
         text: "The Sigmoid function squishes any input into a smooth range between <strong>0 and 1</strong>. Large negative numbers approach 0, and large positive numbers approach 1.<br><br><strong>Pros:</strong> Excellent for models where we need to predict a probability (like \"is this an image of a cat? 0=No, 1=Yes\").<br><strong>Cons:</strong> Suffers from the 'vanishing gradient' problem; for very high or low inputs, the curve is flat, meaning the network stops learning.",
-        equation: `
-            <span>f(z) =&nbsp;</span>
-            <div class="fraction">
-                <span class="numerator">1</span>
-                <span class="denominator">1 + e<sup>-z</sup></span>
-            </div>
-        `,
+        equation: `f(z) = \\frac{1}{1 + e^{-z}}`,
         func: (z) => 1 / (1 + Math.exp(-z)),
         yRange: [-0.2, 1.2]
     },
@@ -82,13 +65,7 @@ const stepsData = [
         type: 'graph',
         title: "Tanh (Hyperbolic Tangent)",
         text: "Similar to Sigmoid, but Tanh squishes values between <strong>-1 and 1</strong>, meaning the output is centered around zero.<br><br><strong>Why use it?</strong> Zero-centered data makes it easier for the next layer of the neural network to learn. It usually performs better than Sigmoid for hidden layers, though it still suffers from vanishing gradients at the extremes.",
-        equation: `
-            <span>f(z) =&nbsp;</span>
-            <div class="fraction">
-                <span class="numerator">e<sup>z</sup> - e<sup>-z</sup></span>
-                <span class="denominator">e<sup>z</sup> + e<sup>-z</sup></span>
-            </div>
-        `,
+        equation: `f(z) = \\frac{e^z - e^{-z}}{e^z + e^{-z}}`,
         func: (z) => Math.tanh(z),
         yRange: [-1.5, 1.5]
     },
@@ -96,9 +73,48 @@ const stepsData = [
         type: 'graph',
         title: "ReLU (Rectified Linear Unit)",
         text: "ReLU is the most popular activation function in modern Deep Learning. The rule is incredibly simple: <strong>if the input is negative, output 0. If positive, output the exact input.</strong><br><br><strong>Why is it so good?</strong> It's computationally very fast and it heavily reduces the vanishing gradient problem, allowing networks to be built very deep.",
-        equation: `f(z) = max(0, z)`,
+        equation: `f(z) = \\max(0, z)`,
         func: (z) => Math.max(0, z),
         yRange: [-1, 5]
+    },
+    // NEW PYTORCH STEP ADDED HERE
+    {
+        type: 'html',
+        title: "Applying in PyTorch",
+        text: "In practice, you rarely write these math equations from scratch. Python Deep Learning libraries like <strong>PyTorch</strong> have them built right in!<br><br>You simply create a mathematical array (your raw input <strong>z</strong>), choose an activation function from the <code>torch.nn</code> module, and pass the data through.<br><br>PyTorch handles all the heavy lifting, instantly returning the correct outputs.",
+        equation: null,
+        visualHtml: `
+            <div class="w-full max-w-lg text-left bg-[#1e1e1e] rounded-xl shadow-xl overflow-hidden flex flex-col font-mono text-sm border border-slate-700">
+                <div class="bg-[#2d2d2d] px-4 py-2 border-b border-[#404040] flex gap-2 items-center">
+                    <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    <span class="text-slate-400 ml-2 text-xs font-sans">activations_tutorial.py</span>
+                </div>
+                <div class="p-6 text-slate-300 leading-relaxed overflow-x-auto text-xs md:text-sm">
+                    <span class="text-rose-400">import</span> torch<br>
+                    <span class="text-rose-400">import</span> torch.nn <span class="text-rose-400">as</span> nn<br><br>
+
+                    <span class="text-slate-500 italic"># 1. Provide our raw inputs 'z'</span><br>
+                    z = torch.tensor([<span class="text-emerald-400">-2.0</span>, <span class="text-emerald-400">0.0</span>, <span class="text-emerald-400">2.5</span>])<br><br>
+
+                    <span class="text-slate-500 italic"># 2. Sigmoid Activation</span><br>
+                    sigmoid = nn.Sigmoid()<br>
+                    a_sig = sigmoid(z) <br>
+                    <span class="text-slate-500 italic"># Output: [0.1192, 0.5000, 0.9241]</span><br><br>
+
+                    <span class="text-slate-500 italic"># 3. Tanh Activation</span><br>
+                    tanh = nn.Tanh()<br>
+                    a_tanh = tanh(z) <br>
+                    <span class="text-slate-500 italic"># Output: [-0.9640, 0.0000, 0.9866]</span><br><br>
+
+                    <span class="text-slate-500 italic"># 4. ReLU Activation</span><br>
+                    relu = nn.ReLU()<br>
+                    a_relu = relu(z) <br>
+                    <span class="text-slate-500 italic"># Output: [0.0000, 0.0000, 2.5000]</span>
+                </div>
+            </div>
+        `
     }
 ];
 
@@ -132,13 +148,28 @@ function updateUI() {
     setTimeout(() => {
         // Texts
         titleEl.innerHTML = step.title;
-        textEl.innerHTML = step.text;
+
+        // Check and render inline math wrapped in $...$
+        if (step.text.includes('$')) {
+            textEl.innerHTML = step.text.replace(/\$(.*?)\$/g, (match, equation) => {
+                return katex.renderToString(equation, {
+                    throwOnError: false,
+                    displayMode: false // Keeps the math inline with the text
+                });
+            });
+        } else {
+            textEl.innerHTML = step.text;
+        }
+
         indicatorEl.innerText = `Step ${currentStep + 1} of ${stepsData.length}`;
 
         // Equation
         if (step.equation) {
             eqBox.classList.remove('hidden');
-            eqEl.innerHTML = step.equation;
+            katex.render(step.equation, eqEl, {
+                throwOnError: false,
+                displayMode: true // Centers it and makes it look like block math
+            });
         } else {
             eqBox.classList.add('hidden');
         }
