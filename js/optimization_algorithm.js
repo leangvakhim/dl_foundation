@@ -1,3 +1,4 @@
+// <!-- Embedded JavaScript to ensure a pure single-file application -->
 // Data and Steps Configuration
 const STEPS = [
     {
@@ -7,6 +8,7 @@ const STEPS = [
         showPoint: false,
         showTangent: false,
         showEquation: false,
+        showCode: false,
         metricsOpacity: '0'
     },
     {
@@ -16,6 +18,7 @@ const STEPS = [
         showPoint: true,
         showTangent: false,
         showEquation: false,
+        showCode: false,
         metricsOpacity: '1'
     },
     {
@@ -25,6 +28,7 @@ const STEPS = [
         showPoint: true,
         showTangent: true,
         showEquation: false,
+        showCode: false,
         metricsOpacity: '1'
     },
     {
@@ -34,6 +38,7 @@ const STEPS = [
         showPoint: true,
         showTangent: true,
         showEquation: true,
+        showCode: false,
         metricsOpacity: '1'
     },
     {
@@ -43,18 +48,33 @@ const STEPS = [
         showPoint: true,
         showTangent: false,
         showEquation: false,
+        showCode: false,
         metricsOpacity: '1',
         triggerAnimation: true
     },
     {
         id: 6,
-        title: "6. Iteration (Keep Optimizing!)",
-        desc: "Optimization is a loop! We compute the new gradient, apply the formula, and take another step. Click 'Next Step' repeatedly to see the algorithm converge to the minimum loss (the bottom of the valley).",
+        title: "6. Iteration",
+        desc: "Optimization is a loop! We compute the new gradient, apply the formula, and take another step. Click <b>Iterate</b> repeatedly to see the algorithm converge to the minimum.",
         showPoint: true,
         showTangent: true,
         showEquation: false,
+        showCode: false,
         metricsOpacity: '1',
-        isLooping: true
+        showIterate: true,
+        nextText: "Next"
+    },
+    {
+        id: 7,
+        title: "7. PyTorch Implementation",
+        desc: "Here is the exact algorithm in <b>PyTorch</b>, the most popular AI library. Notice the parallels: we calculate loss, compute the gradient using <code>.backward()</code>, and update the weight.<br><br>The visual part is over. Now you can use this code to reproduce the logic!",
+        showPoint: false,
+        showTangent: false,
+        showEquation: false,
+        showCode: true,
+        metricsOpacity: '0',
+        hideGraph: true,
+        isFinal: true
     }
 ];
 
@@ -77,9 +97,13 @@ const titleEl = document.getElementById('stepTitle');
 const descEl = document.getElementById('stepDescription');
 const progBar = document.getElementById('progressBar');
 const btnNext = document.getElementById('btnNext');
+const btnIterate = document.getElementById('btnIterate');
 const btnBack = document.getElementById('btnBack');
 const btnReset = document.getElementById('btnReset');
 const equationContainer = document.getElementById('equationContainer');
+const codeContainer = document.getElementById('codeContainer');
+const leftPanel = document.getElementById('leftPanel');
+const rightPanel = document.getElementById('rightPanel');
 const metricsEl = document.getElementById('metrics');
 const metricW = document.getElementById('metric-w');
 const metricLoss = document.getElementById('metric-loss');
@@ -103,20 +127,18 @@ function getGradient(w) { return 2 * w; }
 
 // Canvas Coordinate Mapping
 const minW = -5, maxW = 5;
-const minL = -2, maxL = 25; // slightly below 0 for aesthetics
+const minL = -2, maxL = 25;
 
 function mapX(w) {
     const logicalWidth = canvas.width / 2;
     return ((w - minW) / (maxW - minW)) * logicalWidth;
 }
 function mapY(l) {
-    // Invert Y because canvas Y goes down
     const logicalHeight = canvas.height / 2;
     return logicalHeight - (((l - minL) / (maxL - minL)) * logicalHeight);
 }
 
 function resizeCanvas() {
-    // Make internal resolution match display size for crispness
     const rect = canvas.parentElement.getBoundingClientRect();
     canvas.width = rect.width * 2;
     canvas.height = rect.height * 2;
@@ -128,35 +150,30 @@ window.addEventListener('resize', resizeCanvas);
 
 // Core Rendering Logic
 function renderLoop() {
-    // Handle Animation logic
     if (state.animating) {
-        state.animProgress += 0.04; // Animation speed
+        state.animProgress += 0.04;
         if (state.animProgress >= 1) {
             state.animProgress = 1;
             state.w = state.targetW;
             state.animating = false;
         } else {
-            // Easing function (easeOutQuad)
             const ease = 1 - (1 - state.animProgress) * (1 - state.animProgress);
             state.w = state.startW + (state.targetW - state.startW) * ease;
         }
         updateMetricsUI();
     }
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const cw = canvas.width / 2;
     const ch = canvas.height / 2;
 
     // Draw Axes
     ctx.beginPath();
-    ctx.strokeStyle = '#e2e8f0'; // Tailwind slate-200
+    ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 2;
-    // X-axis (where Loss = 0)
     const yZero = mapY(0);
     ctx.moveTo(0, yZero);
     ctx.lineTo(cw, yZero);
-    // Y-axis (where Weight = 0)
     const xZero = mapX(0);
     ctx.moveTo(xZero, 0);
     ctx.lineTo(xZero, ch);
@@ -164,7 +181,7 @@ function renderLoop() {
 
     // Draw the Loss Curve: L = w^2
     ctx.beginPath();
-    ctx.strokeStyle = '#3b82f6'; // Tailwind blue-500
+    ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 3;
     for (let w = minW; w <= maxW; w += 0.1) {
         const x = mapX(w);
@@ -180,7 +197,7 @@ function renderLoop() {
     if (stepConfig.showPoint) {
         // Draw path history
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'; // faded red
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
         state.history.forEach((oldW, index) => {
@@ -198,20 +215,18 @@ function renderLoop() {
         // Draw Gradient Tangent Line
         if (stepConfig.showTangent && !state.animating) {
             const grad = getGradient(state.w);
-            const lineLengthX = 1.5; // extent on x-axis
+            const lineLengthX = 1.5;
 
-            // Point of tangency
             const px = state.w;
             const py = getLoss(state.w);
 
-            // Two points on the tangent line: y - y1 = m(x - x1)
             const x1 = px - lineLengthX;
             const y1 = py - grad * lineLengthX;
             const x2 = px + lineLengthX;
             const y2 = py + grad * lineLengthX;
 
             ctx.beginPath();
-            ctx.strokeStyle = '#10b981'; // Tailwind emerald-500
+            ctx.strokeStyle = '#10b981';
             ctx.lineWidth = 3;
             ctx.moveTo(mapX(x1), mapY(y1));
             ctx.lineTo(mapX(x2), mapY(y2));
@@ -224,7 +239,7 @@ function renderLoop() {
 
         ctx.beginPath();
         ctx.arc(px, py, 8, 0, Math.PI * 2);
-        ctx.fillStyle = '#ef4444'; // Tailwind red-500
+        ctx.fillStyle = '#ef4444';
         ctx.fill();
         ctx.lineWidth = 2;
         ctx.strokeStyle = '#ffffff';
@@ -251,8 +266,25 @@ function updateUI() {
     titleEl.innerHTML = step.title;
     descEl.innerHTML = step.desc;
 
-    // Equation Display
+    // Container Visibility
     equationContainer.style.display = step.showEquation ? 'flex' : 'none';
+    codeContainer.style.display = step.showCode ? 'flex' : 'none';
+
+    // Layout adjustments for Step 7 (Full width code)
+    if (step.hideGraph) {
+        leftPanel.classList.add('hidden');
+        rightPanel.classList.remove('md:w-2/5');
+        rightPanel.classList.add('w-full', 'md:w-full');
+        codeContainer.classList.add('max-w-3xl', 'mx-auto', 'w-full', 'text-[15px]');
+    } else {
+        leftPanel.classList.remove('hidden');
+        rightPanel.classList.add('md:w-2/5');
+        rightPanel.classList.remove('w-full', 'md:w-full');
+        codeContainer.classList.remove('max-w-3xl', 'mx-auto', 'w-full', 'text-[15px]');
+
+        // Small delay to ensure flex layout is calculated before resizing canvas
+        setTimeout(resizeCanvas, 10);
+    }
 
     // Progress Bar
     const progressPercentage = ((state.currentStepIndex + 1) / STEPS.length) * 100;
@@ -260,21 +292,24 @@ function updateUI() {
 
     // Button States
     btnBack.disabled = state.currentStepIndex === 0;
-    if (state.currentStepIndex === STEPS.length - 1) {
-        btnNext.innerHTML = 'Iterate (Take Step) <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>';
-        btnNext.classList.replace('bg-blue-600', 'bg-green-600');
-        btnNext.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
-        btnNext.classList.replace('shadow-blue-500/30', 'shadow-green-500/30');
+
+    // Iterate Button
+    if (step.showIterate) {
+        btnIterate.classList.remove('hidden');
+    } else {
+        btnIterate.classList.add('hidden');
+    }
+
+    // Next Button & Reset
+    if (step.isFinal) {
+        btnNext.classList.add('hidden');
         btnReset.classList.remove('hidden');
     } else {
-        btnNext.innerHTML = 'Next Step <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
-        btnNext.classList.replace('bg-green-600', 'bg-blue-600');
-        btnNext.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
-        btnNext.classList.replace('shadow-green-500/30', 'shadow-blue-500/30');
+        btnNext.classList.remove('hidden');
+        btnNext.innerHTML = `${step.nextText || 'Next Step'} <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>`;
         btnReset.classList.add('hidden');
     }
 
-    // Metrics Box Visibility
     metricsEl.style.opacity = step.metricsOpacity;
     updateMetricsUI();
 }
@@ -288,10 +323,8 @@ function updateMetricsUI() {
 function triggerOptimizationStep() {
     const grad = getGradient(state.w);
     state.startW = state.w;
-    // Formula: w_new = w_old - learningRate * gradient
     state.targetW = state.w - (state.learningRate * grad);
 
-    // Save to history before moving
     if (state.history[state.history.length - 1] !== state.startW) {
         state.history.push(state.startW);
     }
@@ -301,22 +334,21 @@ function triggerOptimizationStep() {
 }
 
 // Event Listeners
+btnIterate.addEventListener('click', () => {
+    if (state.animating) return;
+    triggerOptimizationStep();
+});
+
 btnNext.addEventListener('click', () => {
-    if (state.animating) return; // Prevent clicking while animating
+    if (state.animating) return;
 
     const currentStepConfig = STEPS[state.currentStepIndex];
 
-    // If we are on the step right before the update, trigger the math
     if (STEPS[state.currentStepIndex + 1]?.triggerAnimation) {
         triggerOptimizationStep();
         state.currentStepIndex++;
         updateUI();
     }
-    // If we are at the end (Looping mode)
-    else if (currentStepConfig.isLooping) {
-        triggerOptimizationStep();
-    }
-    // Normal progression
     else if (state.currentStepIndex < STEPS.length - 1) {
         state.currentStepIndex++;
         updateUI();
@@ -326,17 +358,10 @@ btnNext.addEventListener('click', () => {
 btnBack.addEventListener('click', () => {
     if (state.animating) return;
     if (state.currentStepIndex > 0) {
-        // If we are stepping back from the animation step, reset position
+
         if (STEPS[state.currentStepIndex].triggerAnimation) {
             state.w = state.startW;
             state.history.pop();
-        }
-
-        // If we are stepping back from loop mode, we should reset entirely to keep it simple,
-        // or just clear history and reset to step 4 state. Let's do a hard reset if backing from step 6.
-        if (state.currentStepIndex === 5 && state.history.length > 1) {
-            resetSimulation();
-            return;
         }
 
         state.currentStepIndex--;

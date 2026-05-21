@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimization Algorithm: Gradient Descent</title>
+    <title>Optimization Algorithm: Gradient Descent & PyTorch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- KaTeX for beautiful math equations -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -12,7 +12,6 @@
     <style>
         body {
             background-color: #f8fafc;
-            /* Very light slate, almost white to make the main card pop */
         }
 
         canvas {
@@ -21,7 +20,6 @@
             border-radius: 0.5rem;
         }
 
-        /* Custom scrollbar for a cleaner look if needed */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -44,11 +42,11 @@
 <body class="min-h-screen flex items-center justify-center p-4 text-gray-800 font-sans">
 
     <div
-        class="bg-white w-full max-w-5xl rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col md:flex-row">
+        class="bg-white w-full max-w-5xl rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col md:flex-row transition-all duration-500">
 
         <!-- Left Side: Canvas Visualization -->
-        <div
-            class="w-full md:w-3/5 p-6 bg-white border-b md:border-b-0 md:border-r border-gray-100 flex flex-col items-center justify-center relative">
+        <div id="leftPanel"
+            class="w-full md:w-3/5 p-6 bg-white border-b md:border-b-0 md:border-r border-gray-100 flex flex-col items-center justify-center relative transition-all duration-300">
             <h2 class="text-xl font-semibold mb-4 text-center w-full text-gray-700 tracking-wide">Loss Function
                 Landscape</h2>
             <div class="w-full aspect-square md:aspect-auto md:h-[450px] relative">
@@ -74,7 +72,7 @@
         </div>
 
         <!-- Right Side: Controls and Explanations -->
-        <div class="w-full md:w-2/5 p-8 flex flex-col bg-white">
+        <div id="rightPanel" class="w-full md:w-2/5 p-8 flex flex-col bg-white transition-all duration-300">
             <div class="mb-2">
                 <span class="text-xs font-bold tracking-widest text-blue-500 uppercase">Deep Learning Foundations</span>
                 <h1 class="text-2xl font-bold text-gray-900 mt-1 mb-6">Gradient Descent</h1>
@@ -83,11 +81,11 @@
             <!-- Progress Bar -->
             <div class="w-full bg-gray-100 rounded-full h-2 mb-6">
                 <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                    style="width: 16.6%;"></div>
+                    style="width: 14%;"></div>
             </div>
 
             <!-- Step Content Area -->
-            <div class="flex-grow flex flex-col justify-center min-h-[200px]">
+            <div class="flex-grow flex flex-col justify-center min-h-[250px]">
                 <h3 id="stepTitle" class="text-xl font-semibold text-gray-800 mb-3">1. The Loss Landscape</h3>
                 <p id="stepDescription" class="text-gray-600 leading-relaxed text-[15px]">
                     In deep learning, we want to minimize the error or "Loss" of our model. Imagine this U-shaped curve
@@ -95,7 +93,7 @@
                     "Weight", and the vertical axis is the "Loss".
                 </p>
 
-                <!-- Equation Display Area (Hidden by default, shown on Step 4) -->
+                <!-- Equation Display Area -->
                 <div id="equationContainer"
                     class="mt-6 p-5 bg-blue-50/50 border border-blue-100 rounded-xl hidden flex-col items-center shadow-sm">
                     <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-3">The Optimization
@@ -109,23 +107,65 @@
                         <li><span class="font-semibold text-green-600">&nabla;L</span>: Gradient (the slope)</li>
                     </ul>
                 </div>
+
+                <!-- PyTorch Code Display Area (New addition) -->
+                <div id="codeContainer"
+                    class="mt-5 p-4 bg-slate-900 border border-slate-800 rounded-xl hidden flex-col shadow-inner overflow-x-auto">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">PyTorch
+                            Implementation</span>
+                        <span class="flex space-x-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                        </span>
+                    </div>
+                    <pre class="text-[13px] text-slate-300 font-mono leading-relaxed"><span class="text-pink-400">import</span> torch
+
+<span class="text-slate-500"># 1. Initialize weight (track gradient)</span>
+w = torch.tensor([<span class="text-orange-400">4.0</span>], requires_grad=<span class="text-orange-400">True</span>)
+lr = <span class="text-orange-400">0.1</span>
+
+<span class="text-pink-400">for</span> epoch <span class="text-pink-400">in</span> <span class="text-blue-400">range</span>(<span class="text-orange-400">5</span>):
+    <span class="text-slate-500"># 2. Forward: Calculate Loss</span>
+    loss = w * w
+
+    <span class="text-slate-500"># 3. Compute Gradient (The slope)</span>
+    loss.backward()
+
+    <span class="text-slate-500"># 4. Update Step (Move downhill)</span>
+    <span class="text-pink-400">with</span> torch.no_grad():
+        w -= lr * w.grad
+
+    <span class="text-slate-500"># 5. Clear gradient for next step</span>
+    w.grad.zero_()</pre>
+                </div>
             </div>
 
             <!-- Controls -->
-            <div class="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center gap-4">
+            <div class="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center gap-3">
                 <button id="btnBack"
-                    class="px-5 py-2.5 rounded-lg font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors w-1/2 flex justify-center items-center"
+                    class="px-4 py-2.5 rounded-lg font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors w-full flex justify-center items-center"
                     disabled>
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
                         </path>
                     </svg>
                     Back
                 </button>
+                <button id="btnIterate"
+                    class="px-4 py-2.5 rounded-lg font-medium text-white bg-green-600 hover:bg-green-700 shadow-md shadow-green-500/30 transition-all w-full flex justify-center items-center hidden">
+                    Iterate
+                    <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
+                    </svg>
+                </button>
                 <button id="btnNext"
-                    class="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all w-1/2 flex justify-center items-center">
+                    class="px-4 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/30 transition-all w-full flex justify-center items-center">
                     Next Step
-                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
                 </button>
