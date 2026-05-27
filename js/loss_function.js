@@ -1,3 +1,4 @@
+// <!-- Embedded Scripts -->
 // --- State Management ---
 let currentStep = 0;
 let prediction = 5.0;
@@ -45,14 +46,13 @@ const steps = [
         visId: 'vis-4',
         action: startGradientDescent
     },
-    // NEW PyTorch Step Added Here!
     {
         title: "6. PyTorch Implementation",
         desc: "In the real world, we don't write complex math loops by hand. We use libraries like <strong>PyTorch</strong>. <br><br>Notice how the code in the right panel perfectly matches the 5 steps we just walked through visually. <code>nn.MSELoss()</code> handles the math automatically!",
         equation: "$$\\text{PyTorch: } \\texttt{nn.MSELoss()}$$",
         showSlider: false,
         visId: 'vis-6',
-        action: null // No specific action needed, it just shows the code container
+        action: null
     }
 ];
 
@@ -70,12 +70,11 @@ const slider = document.getElementById('prediction-slider');
 const sliderValDisplay = document.getElementById('slider-val-display');
 const lossValDisplay = document.getElementById('loss-val-display');
 
-// Visual Elements
 const visElements = {
     'vis-1': document.getElementById('vis-1'),
     'vis-2': document.getElementById('vis-2'),
     'vis-4': document.getElementById('vis-4'),
-    'vis-6': document.getElementById('vis-6') // Added vis-6 reference
+    'vis-6': document.getElementById('vis-6')
 };
 const predMarker = document.getElementById('pred-marker');
 const errorLine = document.getElementById('error-line');
@@ -84,6 +83,21 @@ const errorSquare = document.getElementById('error-square');
 const canvas = document.getElementById('loss-canvas');
 const ctx = canvas.getContext('2d');
 const restartBtn = document.getElementById('restart-btn');
+
+// --- Utility: KaTeX Renderer ---
+function renderKaTex(element) {
+    if (window.renderMathInElement) {
+        renderMathInElement(element, {
+            delimiters: [
+                { left: '$$', right: '$$', display: true },
+                { left: '$', right: '$', display: false },
+                { left: '\\(', right: '\\)', display: false },
+                { left: '\\[', right: '\\]', display: true }
+            ],
+            throwOnError: false
+        });
+    }
+}
 
 // --- Initialization ---
 function init() {
@@ -110,6 +124,10 @@ function init() {
         }
     });
 
+    // Make sure the static equations in the visual elements are rendered once
+    renderKaTex(document.getElementById('visual-area'));
+    renderKaTex(document.getElementById('slider-container'));
+
     // Load first step
     renderStep(currentStep);
 }
@@ -133,16 +151,7 @@ function renderStep(index) {
     titleEl.innerHTML = step.title;
     descEl.innerHTML = step.desc;
     stepCounter.innerText = `Step ${index + 1} of ${steps.length}`;
-
-    // Update MathJax (LaTeX)
     mathEl.innerHTML = step.equation;
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        MathJax.typesetClear([mathEl]);
-        MathJax.typesetPromise([mathEl]).then(() => {
-            // Force UI update inside mathjax for dynamic values if needed
-            updateDynamicMathValues();
-        });
-    }
 
     // Update Buttons & Dots
     btnPrev.disabled = index === 0;
@@ -177,10 +186,19 @@ function renderStep(index) {
     }
 
     // Execute specific step visual logic
-    if (index !== 2) errorSquareContainer.classList.add('hidden-view'); // hide square unless step 3
+    if (index !== 2) errorSquareContainer.classList.add('hidden-view');
     if (step.action) {
         step.action();
     }
+
+    // Execute dynamic formula updates (if step 1 or 2). This will also render KaTeX.
+    if (index === 1 || index === 2) {
+        updateDynamicMathValues();
+    } else {
+        renderKaTex(mathEl);
+    }
+
+    renderKaTex(descEl);
 }
 
 function handleSliderChange(e) {
@@ -201,14 +219,18 @@ function updateDisplays() {
 }
 
 function updateDynamicMathValues() {
-    // Re-render math dynamically for steps 2 & 3 if they include numbers
+    let updated = false;
     if (currentStep === 1) {
         mathEl.innerHTML = `$$\\text{Error} = 10 - ${prediction.toFixed(1)} = ${(10 - prediction).toFixed(1)}$$`;
+        updated = true;
     } else if (currentStep === 2) {
         mathEl.innerHTML = `$$Loss = (10 - ${prediction.toFixed(1)})^2 = ${Math.pow(10 - prediction, 2).toFixed(1)}$$`;
+        updated = true;
     }
-    if (window.MathJax && window.MathJax.typesetPromise && (currentStep === 1 || currentStep === 2)) {
-        MathJax.typesetPromise([mathEl]);
+
+    // Re-render KaTeX immediately upon string change
+    if (updated) {
+        renderKaTex(mathEl);
     }
 }
 
@@ -344,4 +366,5 @@ function startGradientDescent() {
 }
 
 // Boot
+// Ensure KaTeX is loaded before initializing
 window.onload = init;
